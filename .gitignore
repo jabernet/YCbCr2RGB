@@ -1,0 +1,6 @@
+/ipch
+Debug
+Release
+ycbcr_conversion_test.*
+!ycbcr_conversion_test.sln
+!ycbcr_conversion_test.vcxproj
