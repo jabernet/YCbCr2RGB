@@ -42,6 +42,7 @@ void ConvertVideoFrame420ToRGB(
 		const unsigned char* cbdata = cbplane.data;
 		const unsigned char* crdata = crplane.data;
 
+		const int ystride = yplane.stride;
 		const int cbstride = cbplane.stride;
 		const int crstride = crplane.stride;
 
@@ -64,7 +65,7 @@ void ConvertVideoFrame420ToRGB(
 		{
 			for(int w = 0; w < width; w += 16)
 			{
-				const __m128i yIn = _mm_loadu_si128((const __m128i*)(ydata + h*width + w));
+				const __m128i yIn = _mm_loadu_si128((const __m128i*)(ydata + h*ystride + w));
 				// assumption is that there is only one pixel in the cb/cr plane per 4 pixels (2x2) in the y plane
 				const __m128i cbIn = _mm_loadu_si128((const __m128i*)(cbdata + h/2*cbstride + w/2));
 				const __m128i crIn = _mm_loadu_si128((const __m128i*)(crdata + h/2*crstride + w/2));
