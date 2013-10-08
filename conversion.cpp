@@ -38,6 +38,13 @@ void ConvertVideoFrame420ToRGB(
 		assert(cbplane.width * 2 == yplane.width);
 		assert(crplane.width * 2 == yplane.width);
 
+		const unsigned char* ydata = yplane.data;
+		const unsigned char* cbdata = cbplane.data;
+		const unsigned char* crdata = crplane.data;
+
+		const int cbstride = cbplane.stride;
+		const int crstride = crplane.stride;
+
 		const __m128 yoffset = _mm_set_ps1(-single_yoffset);
 		const __m128 yexcursion = _mm_set_ps1(1.0f / single_yexcursion);
 		const __m128 cboffset = _mm_set_ps1(-single_cboffset);
@@ -45,11 +52,11 @@ void ConvertVideoFrame420ToRGB(
 		const __m128 croffset = _mm_set_ps1(-single_croffset);
 		const __m128 crexcursion = _mm_set_ps1(1.0f / single_crexcursion);
 
-		const __m128 fr = _mm_set_ps1(255.0 * 2 * (1 - kr));
-		const __m128 fb = _mm_set_ps1(255.0 * 2 * (1 - kb));
+		const __m128 fr = _mm_set_ps1(255.0f * 2 * (1 - kr));
+		const __m128 fb = _mm_set_ps1(255.0f * 2 * (1 - kb));
 
-		const __m128 f1 = _mm_set_ps1(255.0 * (2 * (1 - kb) * kb / (1 - kb - kr)));
-		const __m128 f2 = _mm_set_ps1(255.0 * (2 * (1 - kr) * kr / (1 - kb - kr)));
+		const __m128 f1 = _mm_set_ps1(255.0f * (2 * (1 - kb) * kb / (1 - kb - kr)));
+		const __m128 f2 = _mm_set_ps1(255.0f * (2 * (1 - kr) * kr / (1 - kb - kr)));
 
 		const __m128 c255 = _mm_set_ps1(255.0f);
 
@@ -57,10 +64,10 @@ void ConvertVideoFrame420ToRGB(
 		{
 			for(int w = 0; w < width; w += 16)
 			{
-				const __m128i yIn = _mm_loadu_si128((const __m128i*)(yplane.data + h*width + w));
+				const __m128i yIn = _mm_loadu_si128((const __m128i*)(ydata + h*width + w));
 				// assumption is that there is only one pixel in the cb/cr plane per 4 pixels (2x2) in the y plane
-				const __m128i cbIn = _mm_loadu_si128((const __m128i*)(cbplane.data + h/2*cbplane.stride + w/2));
-				const __m128i crIn = _mm_loadu_si128((const __m128i*)(crplane.data + h/2*crplane.stride + w/2));
+				const __m128i cbIn = _mm_loadu_si128((const __m128i*)(cbdata + h/2*cbstride + w/2));
+				const __m128i crIn = _mm_loadu_si128((const __m128i*)(crdata + h/2*crstride + w/2));
 
 				// yIn ep8 -> ps
 
