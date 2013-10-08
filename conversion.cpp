@@ -11,6 +11,18 @@ void ConvertVideoFrame420ToRGB(
 	unsigned char* pixels
 )
 {
+	// some constant definitions 
+
+	const float single_yoffset = 16.0f;
+	const float single_yexcursion = 219.0f;
+	const float single_cboffset = 128.0f;
+	const float single_cbexcursion = 224.0f;
+	const float single_croffset = 128.0f;
+	const float single_crexcursion = 224.0f;
+
+	const float kr = 0.299f;
+	const float kb = 0.114f;
+
 	if (pixels)
 	{
 		const th_img_plane yplane = ycbcr[0];
@@ -26,15 +38,6 @@ void ConvertVideoFrame420ToRGB(
 		assert(cbplane.width * 2 == yplane.width);
 		assert(crplane.width * 2 == yplane.width);
 
-		const float single_yoffset = 16.0f;
-		const float single_yexcursion = 219.0f;
-		const float single_cboffset = 128.0f;
-		const float single_cbexcursion = 224.0f;
-		const float single_croffset = 128.0f;
-		const float single_crexcursion = 224.0f;
-		const float single_kr = 0.299f;
-		const float single_kb = 0.114f;
-
 		const __m128 yoffset = _mm_set_ps1(-single_yoffset);
 		const __m128 yexcursion = _mm_set_ps1(1.0f / single_yexcursion);
 		const __m128 cboffset = _mm_set_ps1(-single_cboffset);
@@ -42,21 +45,13 @@ void ConvertVideoFrame420ToRGB(
 		const __m128 croffset = _mm_set_ps1(-single_croffset);
 		const __m128 crexcursion = _mm_set_ps1(1.0f / single_crexcursion);
 
-		const __m128 kr = _mm_set_ps1(single_kr);
-		const __m128 kb = _mm_set_ps1(single_kb);
+		const __m128 fr = _mm_set_ps1(255.0 * 2 * (1 - kr));
+		const __m128 fb = _mm_set_ps1(255.0 * 2 * (1 - kb));
+
+		const __m128 f1 = _mm_set_ps1(255.0 * (2 * (1 - kb) * kb / (1 - kb - kr)));
+		const __m128 f2 = _mm_set_ps1(255.0 * (2 * (1 - kr) * kr / (1 - kb - kr)));
+
 		const __m128 c255 = _mm_set_ps1(255.0f);
-		const __m128 c1 = _mm_set_ps1(1.0f);
-		const __m128 c2 = _mm_set_ps1(2.0f);
-
-		const __m128 fr = _mm_mul_ps(c255, _mm_mul_ps(c2, _mm_sub_ps(c1, kr)));
-		const __m128 fb = _mm_mul_ps(c255, _mm_mul_ps(c2, _mm_sub_ps(c1, kb)));
-
-		const __m128 f1 = _mm_mul_ps(c255, _mm_mul_ps(c2, _mm_div_ps(
-				_mm_mul_ps(_mm_sub_ps(c1, kb), kb),
-				_mm_sub_ps(_mm_sub_ps(c1, kb), kr))));
-		const __m128 f2 = _mm_mul_ps(c255, _mm_mul_ps(c2, _mm_div_ps(
-				_mm_mul_ps(_mm_sub_ps(c1, kr), kr),
-				_mm_sub_ps(_mm_sub_ps(c1, kb), kr))));
 
 		for(int h = 0; h < height; ++h)
 		{
